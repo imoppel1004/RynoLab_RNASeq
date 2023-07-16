@@ -1,0 +1,23 @@
+RNA Seq Workflow
+Ryno Lab 2023
+Authors: Jason Kuchtey & Isabella Moppel
+
+Process:
+1. Download all files from GitHub.
+2. Run cleanQuant.sh on each set of paired reads: copy adapters.fasta, refSeq1.fna,
+   EColi_k12_cdna.all.fa, and cleanQuant.sh into the parent directory containing the
+   paired reads (which can remain in .gz form), and run "bash cleanQuant.sh" from the
+   command line. Will take ~5 - ~60 minutes for each set of paired reads, depending on
+   how many you're running at a time (I've run ~20 at a time).
+3. Open BioC_Workflow_IMJK.R in RStudio. Make sure that EColi_k12_gff3.gz is in the same
+   directory as BioC_Workflow_IMJK.R. Set the working directory to the directory containing
+   the directory containing the paired reads (more details in comments in R code). Run the
+   code chunk by chunk. PLEASE read the comments above each chunk of code, sometimes there
+   are things you'll have to do before you run that chunk.
+   Main time constraints:
+    - Installing packages: 5-20 mins
+    - Converting EcoGene IDs to Entrez Gene IDs: ~3-4 hrs
+    - Converting Entrez Gene IDs to Official Gene Symbols: ~2 hrs? Ran overnight so not sure
+   Analyses are optional, take them or leave them. Read the comments!
+
+Contact Jason and Isabella with any questions :)
