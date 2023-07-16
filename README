@@ -7,8 +7,9 @@ Process:
 2. Run cleanQuant.sh on each set of paired reads: copy adapters.fasta, refSeq1.fna,
    EColi_k12_cdna.all.fa, and cleanQuant.sh into the parent directory containing the
    paired reads (which can remain in .gz form), and run "bash cleanQuant.sh" from the
-   command line. Will take ~5 - ~60 minutes for each set of paired reads, depending on
-   how many you're running at a time (I've run ~20 at a time).
+   command line. Will take ~2-4hrs for each set of paired reads, depending on how many
+   you're running at a time (depends on your CPU, but I'd advise no more than ~5 at a
+   time).
 3. Open BioC_Workflow_IMJK.R in RStudio. Make sure that EColi_k12_gff3.gz is in the same
    directory as BioC_Workflow_IMJK.R. Set the working directory to the directory containing
    the directory containing the paired reads (more details in comments in R code). Run the
