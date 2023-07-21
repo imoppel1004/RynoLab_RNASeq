@@ -1,24 +1,12 @@
-RNA Seq Workflow
+﻿RNA Seq Workflow
 Ryno Lab 2023
 Authors: Jason Kuchtey & Isabella Moppel
 
 Process:
-1. Download all files from GitHub.
-2. Run cleanQuant.sh on each set of paired reads: copy adapters.fasta, refSeq1.fna,
-   EColi_k12_cdna.all.fa, and cleanQuant.sh into the parent directory containing the
-   paired reads (which can remain in .gz form), and run "bash cleanQuant.sh" from the
-   command line. Will take ~2-4hrs for each set of paired reads, depending on how many
-   you're running at a time (depends on your CPU, but I'd advise no more than ~5 at a
-   time).
-3. Open BioC_Workflow_IMJK.R in RStudio. Make sure that EColi_k12_gff3.gz is in the same
-   directory as BioC_Workflow_IMJK.R. Set the working directory to the directory containing
-   the directory containing the paired reads (more details in comments in R code). Run the
-   code chunk by chunk. PLEASE read the comments above each chunk of code, sometimes there
-   are things you'll have to do before you run that chunk.
-   Main time constraints:
-    - Installing packages: 5-20 mins
-    - Converting EcoGene IDs to Entrez Gene IDs: ~3-4 hrs
-    - Converting Entrez Gene IDs to Official Gene Symbols: ~2 hrs? Ran overnight so not sure
-   Analyses are optional, take them or leave them. Read the comments!
+1. Download all files from GitHub
+2. Make sure the following programs are installed on your computer: sickle, salmon, R, Rstudio (some of these are big and might take a long time to install)
+3. Run cleanQuant.sh on each set of paired reads: move eColi_transcriptome_fasta.fa and cleanQuant.sh into the parent directory containing the paired reads, and run "bash cleanQuant.sh" from the command line (from that directory). Will take ~0.5hrs for each set of paired reads.
+5. Open BioC_Workflow_IMJK.R in RStudio. Set the working directory to the directory containing the directories containing the paired reads (not a typo, more details in comments in R code). Make sure that BOTH EColi_k12.gff3.gz and EColi_k12.gff3 are in this working directory. Run the code chunk by chunk. PLEASE read the comments above each chunk of code, sometimes there are things you'll have to do before you run it.
+Analyses are optional, take them or leave them. Read the comments!
 
 Contact Jason and Isabella with any questions :)
