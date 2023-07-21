@@ -25,6 +25,7 @@ BiocManager::install(c('ensembldb'), lib=my_lib_path)
 BiocManager::install(c("AnnotationDbi"), lib=my_lib_path)
 BiocManager::install(c("org.EcK12.eg.db"), lib=my_lib_path)
 install.packages(c("readxl"), lib=my_lib_path)
+install.packages(c("openxlsx"), lib=my_lib_path)
 install.packages(c("stringr"), lib=my_lib_path)
 
 
@@ -42,6 +43,7 @@ library(ensembldb)
 library(AnnotationDbi)
 library(org.EcK12.eg.db)
 library(readxl)
+library(openxlsx)
 library(stringr)
 
 
@@ -182,8 +184,10 @@ b_numbers_in_res <- rownames(res_hot)
 res_length <- length(b_numbers_in_res)
 iter <- 1
 while (iter <= res_length) {
-  b_number <- subset(lookup_table, EcoGeneID == b_numbers_in_res[iter], select = GeneSymbol)[1,]
-  rownames(res_hot)[iter] <- b_number
+  if (b_numbers_in_res[iter] %in% lookup_table$EcoGeneID) {
+    b_number <- subset(lookup_table, EcoGeneID == b_numbers_in_res[iter], select = GeneSymbol)[1,]
+    rownames(res_hot)[iter] <- b_number
+  }
   print(iter)
   iter <- iter + 1
 }
