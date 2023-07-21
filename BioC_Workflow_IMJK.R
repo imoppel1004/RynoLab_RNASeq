@@ -2,23 +2,30 @@
 # Ryno Lab 2023
 
 
-# install packages
+# install BiocManager
 if (!require("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
-BiocManager::install('Rsubread')
-BiocManager::install("DESeq2")
-BiocManager::install("tximport")
-BiocManager::install("rhdf5")
-BiocManager::install("BSgenome")
-BiocManager::install("GenomicFeatures")
-BiocManager::install('apeglm')
-BiocManager::install('EnhancedVolcano')
-BiocManager::install("Matrix")
-BiocManager::install('ensembldb')
-BiocManager::install("AnnotationDbi")
-BiocManager::install("org.EcK12.eg.db")
-install.packages("readxl")
+# change the library path as needed, to the first value returned by typing
+#   .libPaths()
+#   in the console
+my_lib_path = .libPaths()[1]
+
+# install packages
+BiocManager::install(c('Rsubread'), lib=my_lib_path)
+BiocManager::install(c('DESeq2'), lib=my_lib_path)
+BiocManager::install(c('tximport'), lib=my_lib_path)
+BiocManager::install(c("rhdf5"), lib=my_lib_path)
+BiocManager::install(c("BSgenome"), lib=my_lib_path)
+BiocManager::install(c("GenomicFeatures"), lib=my_lib_path)
+BiocManager::install(c('apeglm'), lib=my_lib_path)
+BiocManager::install(c('EnhancedVolcano'), lib=my_lib_path)
+BiocManager::install(c("Matrix"), lib=my_lib_path)
+BiocManager::install(c('ensembldb'), lib=my_lib_path)
+BiocManager::install(c("AnnotationDbi"), lib=my_lib_path)
+BiocManager::install(c("org.EcK12.eg.db"), lib=my_lib_path)
+install.packages(c("readxl"), lib=my_lib_path)
+install.packages(c("stringr"), lib=my_lib_path)
 
 
 
@@ -35,6 +42,8 @@ library(ensembldb)
 library(AnnotationDbi)
 library(org.EcK12.eg.db)
 library(readxl)
+library(stringr)
+
 
 
 # create list of quantification file names
@@ -76,31 +85,6 @@ tx2gene <- select(txdb, k, "GENEID", "TXNAME") # this is "EcoGene ID, accession 
 head(tx2gene)
 
 
-# convert all supported GENEIDs (b0001, b0002, etc) to Entrez Gene IDs (944742, 945803, etc)
-acc_nos_in_txdb <- tx2gene$TXNAME
-total_acc_nos_in_txdb <- length(acc_nos_in_txdb)
-total_keys <- length(mappedRkeys(org.EcK12.egACCNUM2EG)) # the right keys are the accession numbers
-how_many_processed <- 0
-iter <- 1
-while (iter < total_acc_nos_in_txdb) {
-  acc_no <- acc_nos_in_txdb[iter]
-  key_iter <- 1
-  while (key_iter < total_keys + 1) {
-    if (acc_no == mappedRkeys(org.EcK12.egACCNUM2EG)[key_iter]) {
-      tx2gene$GENEID[iter] <- mappedLkeys(org.EcK12.egACCNUM2EG[key_iter])
-      key_iter <- total_keys
-    }
-    key_iter <- key_iter + 1
-    if (key_iter == total_keys + 1) {
-      how_many_processed <- how_many_processed + 1
-      print(how_many_processed)
-    }
-  }
-  iter <- iter + 1
-}
-head(tx2gene)
-
-
 
 #import quantification data to DESEQ2
 #cold
@@ -114,65 +98,10 @@ head(txi_hot$counts)
 
 
 
-# now, convert all supported Entrez Gene IDs (944742, 945803, etc) to Official Gene Symbols - cold
-entrez <- rownames(txi_cold$counts)
-total_entrez <- length(entrez)
-supported_entrez <- mappedkeys(org.EcK12.egSYMBOL) # gives Entrez that have a gene_name
-entrez_to_gene_name_map <- as.list(org.EcK12.egSYMBOL[supported_entrez]) # maps Entrez to gene_name
-total_keys <- length(mappedLkeys(org.EcK12.egSYMBOL))
-how_many_processed <- 0
-iter <- 1
-while (iter < total_entrez) {
-  e <- entrez[iter]
-  print(e)
-  key_iter <- 1
-  while (key_iter < total_keys + 1) {
-    if (e == mappedLkeys(org.EcK12.egSYMBOL)[key_iter]) {
-      rownames(txi_cold$counts)[iter] <- mappedRkeys(org.EcK12.egSYMBOL[key_iter])
-      key_iter <- total_keys
-    }
-    key_iter <- key_iter + 1
-    if (key_iter == total_keys + 1) {
-      how_many_processed <- how_many_processed + 1
-      print(how_many_processed)
-    }
-  }
-  iter <- iter + 1
-}
-head(rownames(txi_cold$counts))
-
-# and the same but hot
-entrez <- rownames(txi_hot$counts)
-total_entrez <- length(entrez)
-supported_entrez <- mappedkeys(org.EcK12.egSYMBOL) # gives Entrez that have a gene_name
-entrez_to_gene_name_map <- as.list(org.EcK12.egSYMBOL[supported_entrez]) # maps Entrez to gene_name
-total_keys <- length(mappedLkeys(org.EcK12.egSYMBOL))
-how_many_processed <- 0
-iter <- 1
-while (iter < total_entrez) {
-  e <- entrez[iter]
-  print(e)
-  key_iter <- 1
-  while (key_iter < total_keys + 1) {
-    if (e == mappedLkeys(org.EcK12.egSYMBOL)[key_iter]) {
-      rownames(txi_hot$counts)[iter] <- mappedRkeys(org.EcK12.egSYMBOL[key_iter])
-      key_iter <- total_keys
-    }
-    key_iter <- key_iter + 1
-    if (key_iter == total_keys + 1) {
-      how_many_processed <- how_many_processed + 1
-      print(how_many_processed)
-    }
-  }
-  iter <- iter + 1
-}
-head(rownames(txi_hot$counts))
-
-
-
 #check comparability
 all(rownames(cold_samples) %in% colnames(txi_cold$counts))
 all(rownames(hot_samples) %in% colnames(txi_hot$counts))
+
 
 
 #Get necessary columns from sample info files
@@ -183,9 +112,11 @@ cold_info <- cold_samples[c("Sample", "Rhamnose")]
 hot_info <- hot_samples[c("Sample", "Rhamnose")]
 
 
+
 # make DESEQ2 objects
 dds_cold <- DESeqDataSetFromTximport(txi_cold, colData=cold_info, design=~Rhamnose)
 dds_hot <- DESeqDataSetFromTximport(txi_hot, colData=hot_info, design=~Rhamnose)
+
 
 
 #pre filtering out low count obs
@@ -195,6 +126,7 @@ filt <- rowSums(counts(dds_hot)) >= 10
 dds_hot <- dds_hot[filt,]
 
 
+
 # set factor level - this is detailing where the baseline is
 # this is where it's important that you have the Rhamnose column as "treated" and "untreated"
 # if you want to change that above, just make sure you change it here too
@@ -202,13 +134,59 @@ dds_cold$Rhamnose <- relevel(dds_cold$Rhamnose, ref = "untreated")
 dds_hot$Rhamnose <- relevel(dds_hot$Rhamnose, ref = "untreated")
 
 
+
 # DESeq
 dds_cold <- DESeq(dds_cold)
 dds_hot <- DESeq(dds_hot)
 
+
+
 # can change the alpha value as desired
 res_cold <- results(dds_cold, alpha = 0.05)
 res_hot <- results(dds_hot, alpha = 0.05)
+
+
+
+# convert EcoGene IDs to Official Gene Symbols using the gff3 file
+
+# build the lookup_table of EcoGene IDs : Official Gene Symbols
+gff <- read.delim("EColi_k12.gff3", header=FALSE, comment.char="#") # read in gff3 file
+gff_length <- nrow(gff)
+lookup_table <- data.frame(EcoGeneID = character(0), GeneSymbol = character(0)) # data frame to be filled
+gff_line_no <- 1
+while (gff_line_no < gff_length) {
+  gff_type <- gff$V3[gff_line_no]
+  gff_info <- gff$V9[gff_line_no]
+  if (gff_type == "gene") {
+    ecogene_id <- str_extract(gff_info, "(?<=gene_id=)[^;]+")
+    gene_symbol <- str_extract(gff_info, "(?<=Name=)[^;]+")
+    lookup_table <- rbind(lookup_table, data.frame(EcoGeneID = ecogene_id, GeneSymbol = gene_symbol))
+  }
+  gff_line_no <- gff_line_no + 1
+}
+
+# convert all cold EcoGeneIDs (b0001, b0002, etc) to Official Gene Symbols using the lookup table
+b_numbers_in_res <- rownames(res_cold)
+res_length <- length(b_numbers_in_res)
+iter <- 1
+while (iter <= res_length) {
+  if (b_numbers_in_res[iter] %in% lookup_table$EcoGeneID) {
+    b_number <- subset(lookup_table, EcoGeneID == b_numbers_in_res[iter], select = GeneSymbol)[1,]
+    rownames(res_cold)[iter] <- b_number
+  }
+  print(iter)
+  iter <- iter + 1
+}
+# and the same for hot
+b_numbers_in_res <- rownames(res_hot)
+res_length <- length(b_numbers_in_res)
+iter <- 1
+while (iter <= res_length) {
+  b_number <- subset(lookup_table, EcoGeneID == b_numbers_in_res[iter], select = GeneSymbol)[1,]
+  rownames(res_hot)[iter] <- b_number
+  print(iter)
+  iter <- iter + 1
+}
 
 
 
@@ -233,9 +211,9 @@ sum(res_hot$padj < 0.001, na.rm=TRUE)
 
 
 # subsets with padj < 0.01 && log2FoldChange >= 1
-subset_cold <- subset(data.frame(res_cold), res_cold$padj < 0.01 & res_cold$log2FoldChange >= 1)
+subset_cold <- subset(data.frame(res_cold), res_cold$padj < 0.01 & (res_cold$log2FoldChange >= 1 | res_cold$log2FoldChange <= -1))
 subset_cold_ordered_by_FC <- subset_cold[order(subset_cold$log2FoldChange, decreasing=TRUE),]
-subset_hot <- subset(data.frame(res_hot), res_hot$padj < 0.01 & res_hot$log2FoldChange >= 1)
+subset_hot <- subset(data.frame(res_hot), res_hot$padj < 0.01 & (res_hot$log2FoldChange >= 1 | res_hot$log2FoldChange <= -1))
 subset_hot_ordered_by_FC <- subset_hot[order(subset_hot$log2FoldChange, decreasing=TRUE),]
 
 # print the above subsets to file
