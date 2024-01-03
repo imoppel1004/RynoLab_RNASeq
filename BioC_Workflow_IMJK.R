@@ -51,14 +51,15 @@ library(stringr)
 # create list of quantification file names
 # your working directory should be in the directory with the LMR-P1-28-0 etc folders
 # can set this in the console with setwd("<dirname>")
-# your samples.txt, 28_samples.txt etc should be in this directory
+# there should be TWO of these potential working directories, one for planktonic and one for biofilm, run them separately
+# your samples.txt, 28_samples.txt, 37_samples.txt should be in this directory
 # these .txt files need to be filled manually by you :)
 # have a Filename column (ex LMR-P1-28-0/quant/quant.sf), a Sample column
-#    (P1-28), and a Rhamnose column (treated vs untreated) 
+#    (P1-28), and a Sugar column (treated vs untreated) 
 samples <- read.table(file="samples.txt", header = TRUE)
 filenames <- paste(samples$Filename)
-files <- file.path(filenames,  "quant/quant.sf")
-names(files) <- paste0(1:12)
+files <- file.path(filenames)
+names(files) <- paste0(1:12) # NOTE: change this between 12 & 24 depending on how many samples you're working with
 files
 all(file.exists(files))
 
@@ -67,14 +68,14 @@ all(file.exists(files))
 # make the file list for 28 degree samples
 cold_samples <- read.table(file="28_samples.txt", header = TRUE)
 cold_filenames <- paste(cold_samples$Filename)
-cold_files <- file.path(cold_filenames, "quant/quant.sf")
-names(cold_files) <- paste0(1:6)
+cold_files <- file.path(cold_filenames)
+names(cold_files) <- paste0(1:6) # NOTE: change this between 6 and 12 depending on how many samples you're working with
 
 # and for the 37 degree samples
 hot_samples <- read.table(file="37_samples.txt", header = TRUE)
 hot_filenames <- paste(hot_samples$Filename)
-hot_files <- file.path(hot_filenames, "quant/quant.sf")
-names(hot_files) <- paste0(1:6)
+hot_files <- file.path(hot_filenames)
+names(hot_files) <- paste0(1:6) # NOTE: change this between 6 and 12 depending on how many samples you're working with
 
 
 
@@ -108,16 +109,16 @@ all(rownames(hot_samples) %in% colnames(txi_hot$counts))
 
 #Get necessary columns from sample info files
 # Sample is the column containing the descriptors, like P1-28, P2-37, etc
-# Rhamnose is the column detailing whether the sample has rhamnose or not.
+# Sugar is the column detailing whether the sample has the sugar or not.
 #   Should be either "treated" or "untreated", or you'll run into problems a lil further down.
-cold_info <- cold_samples[c("Sample", "Rhamnose")]
-hot_info <- hot_samples[c("Sample", "Rhamnose")]
+cold_info <- cold_samples[c("Sample", "Sugar")]
+hot_info <- hot_samples[c("Sample", "Sugar")]
 
 
 
 # make DESEQ2 objects
-dds_cold <- DESeqDataSetFromTximport(txi_cold, colData=cold_info, design=~Rhamnose)
-dds_hot <- DESeqDataSetFromTximport(txi_hot, colData=hot_info, design=~Rhamnose)
+dds_cold <- DESeqDataSetFromTximport(txi_cold, colData=cold_info, design=~Sugar)
+dds_hot <- DESeqDataSetFromTximport(txi_hot, colData=hot_info, design=~Sugar)
 
 
 
@@ -130,10 +131,10 @@ dds_hot <- dds_hot[filt,]
 
 
 # set factor level - this is detailing where the baseline is
-# this is where it's important that you have the Rhamnose column as "treated" and "untreated"
+# this is where it's important that you have the Sugar column as "treated" and "untreated"
 # if you want to change that above, just make sure you change it here too
-dds_cold$Rhamnose <- relevel(dds_cold$Rhamnose, ref = "untreated")
-dds_hot$Rhamnose <- relevel(dds_hot$Rhamnose, ref = "untreated")
+dds_cold$Sugar <- relevel(dds_cold$Sugar, ref = "untreated")
+dds_hot$Sugar <- relevel(dds_hot$Sugar, ref = "untreated")
 
 
 
@@ -202,6 +203,11 @@ while (iter <= res_length) {
 View(data.frame(res_cold))
 View(data.frame(res_hot))
 
+# print out these unfiltered data frames to file, ordered by FC
+unfiltered_cold_by_FC <- res_cold[order(res_cold$log2FoldChange),]
+unfiltered_hot_by_FC <- res_hot[order(res_hot$log2FoldChange),]
+write.xlsx(data.frame(unfiltered_cold_by_FC), file = "unfiltered_cold_by_FC.xlsx", rowNames=TRUE)
+write.xlsx(data.frame(unfiltered_hot_by_FC), file = "unfiltered_hot_by_FC.xlsx", rowNames=TRUE)
 
 
 # order by smallest p-value
@@ -418,19 +424,19 @@ write.xlsx(planktonic_vs_biofilm_comp_hot, file = "planktonic_vs_biofilm_comp_ho
 #plotting
 plotMA(res_cold, ylim=c(-8,8))
 plotMA(res_hot, ylim=c(-8,8))
-plotCounts(dds_cold, gene=which.min(res_cold$padj), intgroup="Rhamnose")
-plotCounts(dds_hot, gene=which.min(res_hot$padj), intgroup="Rhamnose")
+plotCounts(dds_cold, gene=which.min(res_cold$padj), intgroup="Sugar")
+plotCounts(dds_hot, gene=which.min(res_hot$padj), intgroup="Sugar")
 
 # volcano plots
-# watch the coef, make sure your Rhamnose column entries match the coef
-resLFC <- lfcShrink(dds_cold, coef="Rhamnose_treated_vs_untreated", type="apeglm")
+# watch the coef, make sure your Sugar column entries match the coef
+resLFC <- lfcShrink(dds_cold, coef="Sugar_treated_vs_untreated", type="apeglm")
 EnhancedVolcano(res_cold,
                 lab = rownames(res_cold),
                 x = 'log2FoldChange',
                 y = 'pvalue',
                 title = "28º Samples"
 )
-resLFC <- lfcShrink(dds_hot, coef="Rhamnose_treated_vs_untreated", type="apeglm")
+resLFC <- lfcShrink(dds_hot, coef="Sugar_treated_vs_untreated", type="apeglm")
 EnhancedVolcano(res_hot,
                 lab = rownames(res_hot),
                 x = 'log2FoldChange',
