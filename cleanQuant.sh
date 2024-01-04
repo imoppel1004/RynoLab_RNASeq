@@ -46,7 +46,7 @@ done
 
 # build index without decoys
 salmon index -t eColi_transcriptome_fasta.fa -i salmon_ecoli_index
-# quantify
+# quantify, mapping-based mode
 for i in $(ls *_R1_trimmed.fastq | sed -r 's/_R1_trimmed.fastq//' | uniq)
 do
 	suffixR1="_R1_trimmed"
