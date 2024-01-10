@@ -420,6 +420,68 @@ View(planktonic_vs_biofilm_comp_hot)
 write.xlsx(planktonic_vs_biofilm_comp_hot, file = "planktonic_vs_biofilm_comp_hot.xlsx", rowNames=FALSE)
 
 
+# compare genes in the equivalent subsets between LB and M9
+# for examples, the planktonic @28C in LB vs the planktonic @28C in M9
+LB_data <- data.frame(read_excel("subset_cold_by_FC_planktonic_LB.xlsx")) # change this depending on which subset you're looking at
+M9_data <- data.frame(read_excel("subset_cold_by_FC_planktonic_M9.xlsx")) # and change this to match the above but the M9 version
+LB_M9_comp <- data.frame(only_LB = character(), only_LB_FC = numeric(), only_LB_padj = numeric(),
+                            both = character(), both_LB_FC = numeric(), both_LB_padj = numeric(), both_M9_FC = numeric(), both_M9_padj = numeric(),
+                            only_M9 = character(), only_M9_FC = numeric(), only_M9_padj = numeric(),
+                            stringsAsFactors = FALSE)
+LB_iter <- 1
+LB_length <- length(rownames(LB_data))
+while (LB_iter <= LB_length) {
+  LB_name <- LB_data$...1[LB_iter]
+  if (!(LB_name %in% M9_data$...1)) { # LB but not M9
+    LB_M9_comp <- rbind(LB_M9_comp, list(only_LB = LB_name,
+                                               only_LB_FC = LB_data$log2FoldChange[LB_iter],
+                                               only_LB_padj = LB_data$padj[LB_iter],
+                                               both = "", both_LB_FC = "", both_LB_padj = "", both_M9_FC = "", both_M9_padj = "",
+                                               only_M9 = "", only_M9_FC = "", only_M9_padj = ""))
+  }
+  LB_iter <- LB_iter + 1
+}  
+LB_iter <- 1
+LB_length <- length(rownames(LB_data))
+while (LB_iter <= LB_length) {
+  LB_name <- LB_data$...1[LB_iter]
+  if (LB_name %in% M9_data$...1) { # LB and M9
+    M9_iter <- 1
+    M9_length <- length(rownames(M9_data))
+    while (M9_iter <= M9_length) {
+      M9_name <- M9_data$...1[M9_iter]
+      if (M9_name == LB_name) {
+        LB_M9_comp <- rbind(LB_M9_comp, list(only_LB = "", only_LB_FC = "", only_LB_padj = "",
+                                                   both = LB_name,
+                                                   both_LB_FC = LB_data$log2FoldChange[LB_iter],
+                                                   both_LB_padj = LB_data$padj[LB_iter],
+                                                   both_M9_FC = M9_data$log2FoldChange[M9_iter],
+                                                   both_M9_padj = M9_data$padj[M9_iter],
+                                                   only_M9 = "", only_M9_FC = "", only_M9_padj = ""))
+      }
+      M9_iter <- M9_iter + 1
+    }
+  }
+  LB_iter <- LB_iter + 1
+}
+M9_iter <- 1
+M9_length <- length(rownames(M9_data))
+while (M9_iter <= M9_length) {
+  M9_name <- M9_data$...1[M9_iter]
+  if (!(M9_name %in% LB_data$...1)) { # M9 but not LB
+    LB_M9_comp <- rbind(LB_M9_comp, list(only_LB = "", only_LB_FC = "", only_LB_padj = "",
+                                               both = "", both_LB_FC = "", both_LB_padj = "", both_M9_FC = "", both_M9_padj = "",
+                                               only_M9 = M9_name,
+                                               only_M9_FC = M9_data$log2FoldChange[M9_iter],
+                                               only_M9_padj = M9_data$padj[M9_iter]))
+  }
+  M9_iter <- M9_iter + 1
+}
+# view comparison
+View(LB_M9_comp)
+# print comparison to file
+write.xlsx(LB_M9_comp, file = "LB_M9_comp_planktonic_28.xlsx", rowNames=FALSE) #change this file output name as needed
+
 
 #plotting
 plotMA(res_cold, ylim=c(-8,8))
